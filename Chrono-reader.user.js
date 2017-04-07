@@ -7,7 +7,7 @@
 // @match        http://www.wykop.pl/*
 // @grant        none
 // ==/UserScript==
-// Badge bullet style by krejd
+// Badge bullet style by krejdd
 
 $('div#nav ul.clearfix:last > li.notification.m-tag').last().before($('<li/>', {
     id: 'firstTag',
@@ -21,6 +21,7 @@ $("#firstTagButton").click(function(event){
     event.preventDefault();
     var tagiURL = "http://www.wykop.pl/powiadomienia/tagi/";
     var notificationSelector = '#content ul.menu-list li.type-light-warning a[href*="pl/wpis/"]';
+	var emptyPageAlertSelector = "#content ul.menu-list li.type-alert p.empty";
     var lastPage = 3;
     var unreadCount = 0;
     var notifications = [];
@@ -60,7 +61,8 @@ $("#firstTagButton").click(function(event){
         return function(html){
             //unreadCount = Number($('#hashtagsNotificationsCount', html).html());
             notifications = $(notificationSelector, html);
-            currentTotal += notifications.length;
+            // possible race condition
+			currentTotal += notifications.length;
             if(page < lastPage && currentTotal < unreadCount){
                 downloadPage(page+1);
                 return;
