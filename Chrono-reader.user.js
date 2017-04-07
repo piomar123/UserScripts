@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Chrono-reader
 // @namespace    https://github.com/piomar123/
-// @version      0.81
+// @version      0.86
 // @description  Przeglądanie powiadomień na wykop.pl w kolejności chronologicznej
 // @author       piomar123
 // @match        http://www.wykop.pl/*
@@ -12,75 +12,89 @@
 // Badge bullet style by krejdd
 
 $('div#nav ul.clearfix:last > li.notification.m-tag').last().before($('<li/>', {
-    id: 'firstTag',
-    html: '<a id="firstTagButton" class="dropdown-show hashtag" href="#"><b id="firstTagBullet" style="background:#0080FF; top:22px; right:16px; min-width:10px; width:10px; min-height:10px; height:10px; border-radius:5px; overflow:hidden;">&nbsp;</b>#</a><div class="notificationsContainer"></div>',
-    class: "notification m-tag piomar-firsttag",
+    id: 'chronoTag',
+    html: '<a id="chronoTagButton" class="dropdown-show hashtag" href="#"><b id="chronoTagBullet" style="background:#0080FF; top:22px; right:16px; min-width:10px; width:10px; min-height:10px; height:10px; border-radius:5px; overflow:hidden;">&nbsp;</b>#</a><div class="notificationsContainer"></div>',
+    class: "notification m-tag piomar-chronotag",
     title: "Najstarszy nieprzeczytany tag",
     alt: "Najstarszy nieprzeczytany tag"
 }));
 
-$("#firstTagButton").click(function(event){
+$("#chronoTagButton").click(function(event){
     event.preventDefault();
     var tagiURL = "http://www.wykop.pl/powiadomienia/tagi/";
     var notificationSelector = '#content ul.menu-list li.type-light-warning a[href*="pl/wpis/"]';
-	var emptyPageAlertSelector = "#content ul.menu-list li.type-alert p.empty";
-    var lastPage = 3;
-    var unreadCount = 0;
-    var notifications = [];
-    var currentTotal = 0;
-    var oldestUrl = null;
+    var emptyPageAlertSelector = "#content ul.menu-list li.type-alert p.empty";
+    var noUnreadMessage = "Nie znalazłem nowszych wpisów";
+    var maxPage = 30;
+
+    var data = {
+        unreadCount: 0,
+        currentTotal: 0,
+        oldestUrl: null
+    };
     $.ajax(tagiURL)
-        .done(firstPageDownloaded)
+        .done(firstPageDownloaded(data))
         .fail(handleFail);
 
-    function firstPageDownloaded(html){
-        unreadCount = Number($('#hashtagsNotificationsCount', html).html());
-        notifications = $(notificationSelector, html);
-        currentTotal = notifications.length;
-        oldestUrl = notifications.last().attr("href");
-        if(currentTotal < unreadCount){
-            downloadPage(2);
-            return;
-        }
-        if(unreadCount === 0){
-            alert("Wszystko przeczytane");
-            return;
-        }
-        if(!oldestUrl){
-            alert("Nie znalazłem nowszych wpisów");
-            return;
-        }
-        window.location.href = oldestUrl;
+    function firstPageDownloaded(data){
+        return function(html){
+            html = parse(html);
+            data.unreadCount = Number($('#hashtagsNotificationsCount', html).html());
+            var notifications = $(notificationSelector, html);
+            data.currentTotal = notifications.length;
+            data.oldestUrl = notifications.last().attr("href");
+            if(data.currentTotal < data.unreadCount){
+                downloadPage(data, 2);
+                return;
+            }
+            if(data.unreadCount === 0){
+                alert("Wszystko przeczytane");
+                return;
+            }
+            if(!data.oldestUrl){
+                alert(noUnreadMessage);
+                return;
+            }
+            window.location.href = data.oldestUrl;
+        };
     }
 
-    function downloadPage(page){
+    function downloadPage(data, page){
         $.ajax(tagiURL + "strona/" + page + "/")
-            .done(nextPageDownloaded(page))
+            .done(nextPageDownloaded(data, page))
             .fail(handleFail);
     }
 
-    function nextPageDownloaded(page){
+    function nextPageDownloaded(data, page){
         return function(html){
-            //unreadCount = Number($('#hashtagsNotificationsCount', html).html());
-            notifications = $(notificationSelector, html);
+            html = parse(html);
+            //data.unreadCount = Number($('#hashtagsNotificationsCount', html).html());
+            var notifications = $(notificationSelector, html);
             // possible race condition
-			currentTotal += notifications.length;
-            if(page < lastPage && currentTotal < unreadCount){
-                downloadPage(page+1);
+            data.currentTotal += notifications.length;
+            data.oldestUrl = notifications.last().attr("href") || data.oldestUrl;
+            if(data.currentTotal < data.unreadCount && page < maxPage && checkPageNotEmpty(html)){
+                downloadPage(data, page+1);
                 return;
             }
-            oldestUrl = notifications.last().attr("href") || oldestUrl;
-            if(!oldestUrl){
-                alert("Nie znalazłem nowszych wpisów");
+            if(!data.oldestUrl){
+                alert(noUnreadMessage);
                 return;
             }
-            window.location.href = oldestUrl;
+            window.location.href = data.oldestUrl;
         };
+    }
+
+    function parse(html){
+        html = html.replace(/<img[^>]*>/g, "");
+        return $.parseHTML(html);
+    }
+
+    function checkPageNotEmpty(html){
+        return $(emptyPageAlertSelector, html).length === 0;
     }
 
     function handleFail(jqXHR, textStatus, err){
         alert(textStatus + ": " + err);
     }
 });
-
-
