@@ -1,11 +1,13 @@
 // ==UserScript==
 // @name         Chrono-reader
 // @namespace    https://github.com/piomar123/
-// @version      0.8
-// @description  Chronological tag notification reader for wykop.pl
+// @version      0.81
+// @description  Przeglądanie powiadomień na wykop.pl w kolejności chronologicznej
 // @author       piomar123
 // @match        http://www.wykop.pl/*
 // @grant        none
+// @name:en         Chrono-reader
+// @description:en  Chronological tag notification reader for wykop.pl
 // ==/UserScript==
 // Badge bullet style by krejdd
 
