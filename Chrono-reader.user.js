@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         Chrono-reader
 // @namespace    https://github.com/piomar123/
-// @version      0.86
+// @version      0.87
 // @description  Przeglądanie powiadomień na wykop.pl w kolejności chronologicznej
 // @author       piomar123
 // @match        http://www.wykop.pl/*
+// @match        https://www.wykop.pl/*
 // @grant        none
 // @name:en         Chrono-reader
 // @description:en  Chronological tag notification reader for wykop.pl
@@ -21,7 +22,7 @@ $('div#nav ul.clearfix:last > li.notification.m-tag').last().before($('<li/>', {
 
 $("#chronoTagButton").click(function(event){
     event.preventDefault();
-    var tagiURL = "http://www.wykop.pl/powiadomienia/tagi/";
+    var tagiURL = "/powiadomienia/tagi/";
     var notificationSelector = '#content ul.menu-list li.type-light-warning a[href*="pl/wpis/"]';
     var emptyPageAlertSelector = "#content ul.menu-list li.type-alert p.empty";
     var noUnreadMessage = "Nie znalazłem nowszych wpisów";
