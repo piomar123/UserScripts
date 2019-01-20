@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Chrono-reader
 // @namespace    https://github.com/piomar123/
-// @version      0.87
+// @version      0.90
 // @description  Przeglądanie powiadomień na wykop.pl w kolejności chronologicznej
 // @author       piomar123
 // @match        http://www.wykop.pl/*
@@ -12,12 +12,22 @@
 // ==/UserScript==
 // Badge bullet style by krejdd
 
+var tagiURL = "/powiadomienia/tagi/";
+
 $('div#nav ul.clearfix:last > li.notification.m-tag').last().before($('<li/>', {
     id: 'chronoTag',
     html: '<a id="chronoTagButton" class="dropdown-show hashtag" href="#"><b id="chronoTagBullet" style="background:#0080FF; top:22px; right:16px; min-width:10px; width:10px; min-height:10px; height:10px; border-radius:5px; overflow:hidden;">&nbsp;</b>#</a><div class="notificationsContainer"></div>',
     class: "notification m-tag piomar-chronotag",
     title: "Najstarszy nieprzeczytany tag",
     alt: "Najstarszy nieprzeczytany tag"
+}));
+
+$('div#nav ul.clearfix:last > li.notification.m-tag').last().before($('<li/>', {
+    id: 'chronoList',
+    html: '<a id="chronoListButton" class="dropdown-show hashtag" href="/powiadomienia/tagi/#test"><b id="chronoListBullet" style="background:#00A0FF; top:22px; right:16px; min-width:10px; width:10px; min-height:10px; height:10px; border-radius:5px; overflow:hidden;">&nbsp;</b>=</a><div class="notificationsContainer"></div>',
+    class: "notification m-tag piomar-chronotag",
+    title: "Najstarsze neprzeczytane wpisy",
+    alt: "Najstarsze neprzeczytane wpisy"
 }));
 
 $("#chronoTagButton").click(function(event){
@@ -97,5 +107,24 @@ $("#chronoTagButton").click(function(event){
 
     function handleFail(jqXHR, textStatus, err){
         alert(textStatus + ": " + err);
+    }
+});
+
+$("#chronoListButton").click(function(event){
+    event.preventDefault();
+    var notificationSelector = '#content ul.menu-list li.type-light-warning a[href*="pl/wpis/"]';
+    var emptyPageAlertSelector = "#content ul.menu-list li.type-alert p.empty";
+    var noUnreadMessage = "Nie znalazłem nowszych wpisów";
+    var maxPage = 30;
+    window.location.href = "/powiadomienia/tagi/#test";
+});
+
+$(document).ready(function(event){
+    if (location.pathname !== tagiURL) {
+        return;
+    }
+    if (location.hash.startsWith('#test')) {
+        $('#content > .rbl-block > .space').remove();
+        $('#content > .rbl-block.pager').remove();
     }
 });
